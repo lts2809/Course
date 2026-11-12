@@ -1,0 +1,491 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mes Courses</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Mise en page : une colonne étroite façon carnet, deux vues (Liste / Mémo) sous un en-tête simple. */
+:root {
+  --bg: #F1F5F0;
+  --surface: #FFFFFF;
+  --ink: #16241B;
+  --muted: #5B6E61;
+  --line: #DAE3D8;
+  --line-strong: #A9B9AD;
+  --accent: #1B7F4C;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEFE2;
+  --done: #8B9B90;
+  --danger: #B3402F;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1711; --surface: #172119; --ink: #E7F0E9; --muted: #9DB0A2; --line: #2A382D;
+    --line-strong: #4B5E50; --accent: #4CC27F; --accent-ink: #0A1A10; --accent-soft: #1E3827;
+    --done: #70826F; --danger: #E27D6C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1711; --surface: #172119; --ink: #E7F0E9; --muted: #9DB0A2; --line: #2A382D;
+  --line-strong: #4B5E50; --accent: #4CC27F; --accent-ink: #0A1A10; --accent-soft: #1E3827;
+  --done: #70826F; --danger: #E27D6C; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  padding-block: 24px 96px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font: 700 30px/1.1 var(--font-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header .date { margin: 4px 0 0; color: var(--muted); }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--line); border-radius: 14px; }
+.tab { border: 0; background: transparent; color: var(--muted); font: 600 15px var(--font-body); height: 44px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.tab .count { font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); padding: 1px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.form { padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.form .name-in { flex: 1 1 100%; }
+.form select { flex: 1 1 160px; min-width: 0; }
+input[type="text"], input[type="search"], select {
+  height: 44px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 10px; padding: 0 12px; font: 16px var(--font-body); min-width: 0;
+}
+.btn { height: 44px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font: 600 15px var(--font-body); padding: 0 16px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn.small { height: 38px; font-size: 14px; padding: 0 12px; }
+.btn:disabled { opacity: .45; cursor: default; }
+.opt { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+.opt input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.hint { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between; background: var(--accent-soft); color: var(--ink); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+.hint p { margin: 0; flex: 1 1 220px; }
+
+.progress { padding: 14px; display: grid; gap: 8px; }
+.progress .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-weight: 600; }
+.progress .top span:last-child { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .25s ease; }
+
+.group { overflow: hidden; }
+.group h2 { margin: 0; padding: 10px 14px; font: 600 12px var(--font-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--accent-soft); display: flex; justify-content: space-between; }
+.group ul { list-style: none; margin: 0; padding: 0; }
+.row, .mrow { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; min-height: 54px; border-top: 1px solid var(--line); }
+.group ul li:first-child { border-top: 0; }
+.check { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 6px 0; }
+.check input { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 26px; height: 26px; margin: 0; border: 2px solid var(--line-strong); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.check input:checked { background: var(--accent); border-color: var(--accent); }
+.check input:checked::after { content: ""; position: absolute; left: 7px; top: 2px; width: 6px; height: 12px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+.name { overflow-wrap: anywhere; font-size: 16px; }
+.is-done .name { text-decoration: line-through; color: var(--done); }
+.qty { display: flex; align-items: center; gap: 2px; }
+.qty .n { min-width: 24px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.icon { width: 36px; height: 36px; border-radius: 10px; border: 0; background: transparent; color: var(--muted); font: 500 20px/1 var(--font-body); cursor: pointer; flex: none; }
+.icon:hover { background: var(--accent-soft); color: var(--ink); }
+.icon.x:hover { color: var(--danger); }
+
+.recap { padding: 16px 14px; display: grid; gap: 14px; }
+.recap h2 { margin: 0; font: 700 18px var(--font-display); }
+.recap .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.recap .stat { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+.recap .stat dt { font-size: 12px; color: var(--muted); }
+.recap .stat dd { margin: 0; font: 700 24px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.recap .stat.ok dd { color: var(--accent); }
+.recap ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.recap li { display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr); gap: 4px 12px; align-items: baseline; border-top: 1px solid var(--line); padding-top: 8px; user-select: text; }
+.recap li:first-child { border-top: 0; padding-top: 0; }
+.recap .rl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.recap .rn { overflow-wrap: anywhere; }
+.recap s { color: var(--done); }
+@media (max-width: 420px) { .recap li { grid-template-columns: 1fr; } }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.empty { padding: 28px 20px; text-align: center; display: grid; gap: 12px; justify-items: center; color: var(--muted); }
+.empty strong { color: var(--ink); font: 700 18px var(--font-display); }
+.empty p { margin: 0; max-width: 36ch; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters input[type="search"] { flex: 1 1 100%; }
+.chip { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink); font: 500 14px var(--font-body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+.mrow { padding-left: 6px; }
+.pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; background: transparent; border: 0; color: var(--ink); cursor: pointer; padding: 8px; border-radius: 10px; font: inherit; min-height: 44px; }
+.pick .tick { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line-strong); display: grid; place-items: center; }
+.pick.on .tick { background: var(--accent); border-color: var(--accent); }
+.pick.on .tick::after { content: ""; width: 6px; height: 12px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: translateY(-1px) rotate(45deg); }
+.pick .name { flex: 1; min-width: 0; }
+.pick .st { flex: none; font-size: 13px; color: var(--muted); }
+.pick.on .st { color: var(--accent); font-weight: 600; }
+
+#toast { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; padding: 0 max(16px, env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
+#toast .in { pointer-events: auto; display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 10px 10px 10px 16px; max-width: 480px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+#toast button { height: 34px; border: 0; border-radius: 8px; padding: 0 12px; background: var(--accent); color: var(--accent-ink); font: 600 14px var(--font-body); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Mes courses</h1>
+    <p class="date" id="date"></p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Vues">
+    <button class="tab" role="tab" id="tab-liste" aria-controls="panel-liste" data-view="liste">Ma liste <span class="count" id="count-liste">0</span></button>
+    <button class="tab" role="tab" id="tab-memo" aria-controls="panel-memo" data-view="memo">Mémo <span class="count" id="count-memo">0</span></button>
+  </div>
+
+  <section id="panel-liste" role="tabpanel" aria-labelledby="tab-liste" class="app" style="gap:16px">
+    <form id="add-form" class="card form" autocomplete="off">
+      <input type="text" id="add-name" class="name-in" placeholder="Ajouter un article (ex. Tomates cerises)" aria-label="Nom de l'article" required>
+      <select id="add-aisle" aria-label="Rayon"></select>
+      <button class="btn" type="submit">Ajouter</button>
+      <label class="opt"><input type="checkbox" id="add-keep" checked> Garder cet article dans le mémo</label>
+    </form>
+    <div id="hint" class="hint" hidden>
+      <p>Liste d'exemple pour essayer l'application. Cochez, modifiez ou videz-la.</p>
+      <button type="button" class="btn small ghost" data-act="clear-all">Vider la liste</button>
+    </div>
+    <div id="progress" class="card progress" hidden>
+      <div class="top"><span id="progress-title"></span><span id="progress-count"></span></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar"><i id="bar-fill"></i></div>
+    </div>
+    <div id="list-groups" class="app" style="gap:12px"></div>
+    <section id="recap" class="card recap" aria-labelledby="recap-title" hidden>
+      <h2 id="recap-title">Récapitulatif</h2>
+      <dl class="stats" id="recap-stats"></dl>
+      <ul id="recap-aisles"></ul>
+      <div class="actions"><button type="button" class="btn small" data-act="copy-recap">Copier la liste</button></div>
+    </section>
+    <div id="list-actions" class="actions" hidden>
+      <button type="button" class="btn small ghost" id="btn-clear-done" data-act="clear-done">Retirer les cochés</button>
+      <button type="button" class="btn small ghost" id="btn-uncheck" data-act="uncheck-all">Tout décocher</button>
+      <button type="button" class="btn small ghost" data-act="clear-all">Vider la liste</button>
+    </div>
+  </section>
+
+  <section id="panel-memo" role="tabpanel" aria-labelledby="tab-memo" class="app" style="gap:16px" hidden>
+    <form id="memo-form" class="card form" autocomplete="off">
+      <input type="text" id="memo-name" class="name-in" placeholder="Nouvel aliment à retenir (ex. Lait d'avoine)" aria-label="Nom de l'aliment" required>
+      <select id="memo-aisle" aria-label="Rayon"></select>
+      <button class="btn" type="submit">Ajouter au mémo</button>
+    </form>
+    <div class="filters">
+      <input type="search" id="memo-search" placeholder="Chercher dans le mémo" aria-label="Chercher dans le mémo">
+      <button type="button" class="chip" data-filter="all" aria-pressed="true">Tous</button>
+      <button type="button" class="chip" data-filter="on" aria-pressed="false">Sur la liste</button>
+      <button type="button" class="chip" data-filter="off" aria-pressed="false">Pas sur la liste</button>
+    </div>
+    <div id="memo-groups" class="app" style="gap:12px"></div>
+  </section>
+</div>
+
+<div id="toast" hidden><div class="in"><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>Annuler</button></div></div>
+
+<script>
+(function () {
+  var KEY = 'mes-courses-v1';
+  var AISLES = [
+    { id: 'fruits', label: 'Fruits et légumes' },
+    { id: 'boulangerie', label: 'Boulangerie' },
+    { id: 'frais', label: 'Produits frais' },
+    { id: 'viande', label: 'Viandes et poissons' },
+    { id: 'epicerie', label: 'Épicerie' },
+    { id: 'boissons', label: 'Boissons' },
+    { id: 'surgeles', label: 'Surgelés' },
+    { id: 'maison', label: 'Maison et hygiène' },
+    { id: 'autre', label: 'Autre' }
+  ];
+  var DEFAULT_MEMO = [
+    ['Pommes', 'fruits'], ['Bananes', 'fruits'], ['Citrons', 'fruits'], ['Tomates', 'fruits'], ['Carottes', 'fruits'],
+    ['Pommes de terre', 'fruits'], ['Oignons', 'fruits'], ['Salade', 'fruits'], ['Courgettes', 'fruits'],
+    ['Pain', 'boulangerie'], ['Baguette', 'boulangerie'], ['Pain de mie', 'boulangerie'],
+    ['Lait', 'frais'], ['Beurre', 'frais'], ['Œufs', 'frais'], ['Yaourts', 'frais'], ['Fromage râpé', 'frais'],
+    ['Crème fraîche', 'frais'], ['Jambon', 'frais'],
+    ['Poulet', 'viande'], ['Steaks hachés', 'viande'], ['Saumon', 'viande'], ['Lardons', 'viande'],
+    ['Pâtes', 'epicerie'], ['Riz', 'epicerie'], ['Farine', 'epicerie'], ['Sucre', 'epicerie'], ['Café', 'epicerie'],
+    ['Huile d\'olive', 'epicerie'], ['Céréales', 'epicerie'], ['Sauce tomate', 'epicerie'], ['Thon en boîte', 'epicerie'],
+    ['Eau', 'boissons'], ['Jus d\'orange', 'boissons'], ['Thé', 'boissons'],
+    ['Petits pois surgelés', 'surgeles'], ['Glace', 'surgeles'], ['Pizza surgelée', 'surgeles'],
+    ['Papier toilette', 'maison'], ['Liquide vaisselle', 'maison'], ['Lessive', 'maison'], ['Dentifrice', 'maison'], ['Sacs poubelle', 'maison']
+  ];
+
+  function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function norm(s) { return String(s).trim().toLowerCase(); }
+  function $(s) { return document.querySelector(s); }
+  function aisleLabel(id) { for (var i = 0; i < AISLES.length; i++) if (AISLES[i].id === id) return AISLES[i].label; return 'Autre'; }
+
+  function fresh() {
+    var memo = DEFAULT_MEMO.map(function (m) { return { id: uid(), name: m[0], aisle: m[1] }; });
+    function pick(n) { return memo.filter(function (m) { return m.name === n; })[0]; }
+    var list = [['Lait', 1, true], ['Pain', 1, false], ['Pommes', 6, false], ['Œufs', 1, false], ['Pâtes', 2, false]].map(function (r) {
+      var m = pick(r[0]);
+      return { id: uid(), name: m.name, aisle: m.aisle, qty: r[1], done: r[2] };
+    });
+    return { memo: memo, list: list, example: true };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.memo) && Array.isArray(s.list)) return s;
+      }
+    } catch (e) {}
+    return fresh();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var state = load();
+  var view = 'liste', filter = 'all', query = '';
+  var snap = null, toastTimer = null;
+
+  function onList(name) { var k = norm(name); return state.list.filter(function (i) { return norm(i.name) === k; })[0]; }
+  function inMemo(name) { var k = norm(name); return state.memo.filter(function (m) { return norm(m.name) === k; })[0]; }
+
+  function showToast(msg, undo) {
+    $('#toast-msg').textContent = msg;
+    $('#toast-undo').hidden = !undo;
+    $('#toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $('#toast').hidden = true; }, 5000);
+  }
+  function mutate(fn, msg, canUndo) {
+    snap = JSON.stringify(state);
+    fn();
+    state.example = false;
+    save();
+    renderAll();
+    if (msg) showToast(msg, canUndo);
+  }
+
+  function addToList(name, aisle, qty) {
+    var ex = onList(name);
+    if (ex) { ex.qty += qty || 1; ex.done = false; return 'bump'; }
+    state.list.push({ id: uid(), name: name, aisle: aisle, qty: qty || 1, done: false });
+    return 'new';
+  }
+
+  /* Rendu */
+  function groupByAisle(items) {
+    return AISLES.map(function (a) {
+      return { aisle: a, items: items.filter(function (i) { return (i.aisle || 'autre') === a.id; }) };
+    }).filter(function (g) { return g.items.length; });
+  }
+  function rowHtml(i) {
+    return '<li class="row' + (i.done ? ' is-done' : '') + '">' +
+      '<label class="check"><input type="checkbox" data-act="toggle" data-id="' + i.id + '"' + (i.done ? ' checked' : '') + '>' +
+      '<span class="name">' + esc(i.name) + '</span></label>' +
+      '<div class="qty" role="group" aria-label="Quantité de ' + esc(i.name) + '">' +
+      '<button type="button" class="icon" data-act="minus" data-id="' + i.id + '" aria-label="Moins">−</button>' +
+      '<span class="n">' + i.qty + '</span>' +
+      '<button type="button" class="icon" data-act="plus" data-id="' + i.id + '" aria-label="Plus">+</button></div>' +
+      '<button type="button" class="icon x" data-act="remove" data-id="' + i.id + '" aria-label="Retirer ' + esc(i.name) + ' de la liste">×</button></li>';
+  }
+  function renderList() {
+    var total = state.list.length;
+    var done = state.list.filter(function (i) { return i.done; }).length;
+    $('#hint').hidden = !(state.example && total);
+    $('#progress').hidden = !total;
+    $('#list-actions').hidden = !total;
+    $('#btn-clear-done').disabled = !done;
+    $('#btn-uncheck').disabled = !done;
+    if (total) {
+      var pct = Math.round(done / total * 100);
+      $('#progress-title').textContent = done === total ? 'Courses terminées' : 'Dans le panier';
+      $('#progress-count').textContent = done + ' sur ' + total + ' article' + (total > 1 ? 's' : '');
+      $('#bar-fill').style.width = pct + '%';
+      $('#bar').setAttribute('aria-valuenow', pct);
+    }
+    var html = '';
+    if (!total) {
+      html = '<div class="card empty"><strong>Votre liste est vide</strong><p>Ajoutez un article ci-dessus, ou choisissez parmi vos habituels dans le mémo.</p>' +
+        '<button type="button" class="btn" data-act="goto-memo">Ouvrir le mémo</button></div>';
+    } else {
+      groupByAisle(state.list).forEach(function (g) {
+        var sorted = g.items.filter(function (i) { return !i.done; }).concat(g.items.filter(function (i) { return i.done; }));
+        var left = g.items.filter(function (i) { return !i.done; }).length;
+        html += '<section class="card group"><h2><span>' + esc(g.aisle.label) + '</span><span>' + left + '/' + g.items.length + '</span></h2><ul>' +
+          sorted.map(rowHtml).join('') + '</ul></section>';
+      });
+    }
+    $('#list-groups').innerHTML = html;
+    renderRecap();
+  }
+  function itemLabel(i) { return i.name + (i.qty > 1 ? ' ×' + i.qty : ''); }
+  function renderRecap() {
+    var total = state.list.length;
+    $('#recap').hidden = !total;
+    if (!total) return;
+    var done = state.list.filter(function (i) { return i.done; }).length;
+    var units = state.list.reduce(function (s, i) { return s + i.qty; }, 0);
+    var left = total - done;
+    function stat(label, value, cls) { return '<div class="stat' + (cls ? ' ' + cls : '') + '"><dt>' + label + '</dt><dd>' + value + '</dd></div>'; }
+    $('#recap-stats').innerHTML =
+      stat('Articles', total) + stat('Unités', units) + stat('Restants', left, left === 0 ? 'ok' : '');
+    $('#recap-aisles').innerHTML = groupByAisle(state.list).map(function (g) {
+      var names = g.items.map(function (i) { return i.done ? '<s>' + esc(itemLabel(i)) + '</s>' : esc(itemLabel(i)); }).join(', ');
+      return '<li><span class="rl">' + esc(g.aisle.label) + '</span><span class="rn">' + names + '</span></li>';
+    }).join('');
+  }
+  function recapText() {
+    var d = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    var out = 'Mes courses, ' + d + '\n';
+    groupByAisle(state.list).forEach(function (g) {
+      out += '\n' + g.aisle.label + '\n';
+      g.items.forEach(function (i) { out += (i.done ? '[x] ' : '[ ] ') + itemLabel(i) + '\n'; });
+    });
+    return out.trim();
+  }
+  function renderMemo() {
+    var q = norm(query);
+    var items = state.memo.filter(function (m) {
+      var on = !!onList(m.name);
+      if (filter === 'on' && !on) return false;
+      if (filter === 'off' && on) return false;
+      return !q || norm(m.name).indexOf(q) !== -1;
+    });
+    var html = '';
+    if (!items.length) {
+      html = '<div class="card empty"><strong>Rien à afficher</strong><p>' +
+        (state.memo.length ? 'Aucun aliment ne correspond à ce filtre.' : 'Le mémo est vide. Ajoutez les aliments que vous achetez souvent.') + '</p></div>';
+    } else {
+      groupByAisle(items).forEach(function (g) {
+        html += '<section class="card group"><h2><span>' + esc(g.aisle.label) + '</span><span>' + g.items.length + '</span></h2><ul>' +
+          g.items.map(function (m) {
+            var on = !!onList(m.name);
+            return '<li class="mrow"><button type="button" class="pick' + (on ? ' on' : '') + '" data-act="pick" data-id="' + m.id + '" aria-pressed="' + on + '">' +
+              '<span class="tick" aria-hidden="true"></span><span class="name">' + esc(m.name) + '</span>' +
+              '<span class="st">' + (on ? 'Sur la liste' : 'Ajouter') + '</span></button>' +
+              '<button type="button" class="icon x" data-act="forget" data-id="' + m.id + '" aria-label="Retirer ' + esc(m.name) + ' du mémo">×</button></li>';
+          }).join('') + '</ul></section>';
+      });
+    }
+    $('#memo-groups').innerHTML = html;
+  }
+  function renderTabs() {
+    $('#count-liste').textContent = state.list.length;
+    $('#count-memo').textContent = state.memo.length;
+    ['liste', 'memo'].forEach(function (v) {
+      $('#tab-' + v).setAttribute('aria-selected', String(view === v));
+      $('#panel-' + v).hidden = view !== v;
+    });
+  }
+  function renderAll() {
+    var a = document.activeElement, sel = null;
+    if (a && a.dataset && a.dataset.act && a.dataset.id) sel = '[data-act="' + a.dataset.act + '"][data-id="' + a.dataset.id + '"]';
+    renderTabs(); renderList(); renderMemo();
+    if (sel) { var el = document.querySelector(sel); if (el) el.focus(); }
+  }
+  function setView(v) {
+    view = v === 'memo' ? 'memo' : 'liste';
+    if (location.hash !== '#' + view) { try { location.hash = view; } catch (e) {} }
+    renderTabs();
+  }
+
+  /* Actions */
+  function byId(arr, id) { return arr.filter(function (x) { return x.id === id; })[0]; }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act],[data-view],[data-filter]');
+    if (!t) return;
+    if (t.dataset.view) { setView(t.dataset.view); return; }
+    if (t.dataset.filter) {
+      filter = t.dataset.filter;
+      document.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.filter === filter)); });
+      renderMemo(); return;
+    }
+    var act = t.dataset.act, id = t.dataset.id;
+    if (act === 'toggle') return;
+    if (act === 'copy-recap') {
+      var txt = recapText();
+      var ok = function () { showToast('Liste copiée', false); };
+      var ko = function () { showToast('Copie impossible : sélectionnez le texte du récapitulatif', false); };
+      try { navigator.clipboard.writeText(txt).then(ok, ko); } catch (err) { ko(); }
+      return;
+    }
+    if (act === 'goto-memo') { setView('memo'); return; }
+    if (act === 'plus') { var p = byId(state.list, id); if (p) mutate(function () { p.qty += 1; }); }
+    else if (act === 'minus') { var m = byId(state.list, id); if (m && m.qty > 1) mutate(function () { m.qty -= 1; }); }
+    else if (act === 'remove') {
+      var r = byId(state.list, id);
+      if (r) mutate(function () { state.list = state.list.filter(function (x) { return x.id !== id; }); }, r.name + ' retiré de la liste', true);
+    }
+    else if (act === 'pick') {
+      var mi = byId(state.memo, id); if (!mi) return;
+      var ex = onList(mi.name);
+      if (ex) mutate(function () { state.list = state.list.filter(function (x) { return x.id !== ex.id; }); }, mi.name + ' retiré de la liste', true);
+      else mutate(function () { addToList(mi.name, mi.aisle, 1); }, mi.name + ' ajouté à la liste', true);
+    }
+    else if (act === 'forget') {
+      var f = byId(state.memo, id);
+      if (f) mutate(function () { state.memo = state.memo.filter(function (x) { return x.id !== id; }); }, f.name + ' retiré du mémo', true);
+    }
+    else if (act === 'clear-done') {
+      mutate(function () { state.list = state.list.filter(function (x) { return !x.done; }); }, 'Articles cochés retirés', true);
+    }
+    else if (act === 'uncheck-all') {
+      mutate(function () { state.list.forEach(function (x) { x.done = false; }); });
+    }
+    else if (act === 'clear-all') {
+      mutate(function () { state.list = []; }, 'Liste vidée', true);
+    }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.act === 'toggle') {
+      var it = byId(state.list, t.dataset.id);
+      if (it) mutate(function () { it.done = t.checked; });
+    }
+  });
+  $('#toast-undo').addEventListener('click', function () {
+    if (!snap) return;
+    try { state = JSON.parse(snap); } catch (e) { return; }
+    snap = null; save(); renderAll();
+    $('#toast').hidden = true;
+  });
+  $('#add-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#add-name').value.trim();
+    if (!name) return;
+    var known = inMemo(name);
+    var aisle = known ? known.aisle : $('#add-aisle').value;
+    var keep = $('#add-keep').checked;
+    mutate(function () {
+      addToList(name, aisle, 1);
+      if (keep && !known) state.memo.push({ id: uid(), name: name, aisle: aisle });
+    }, name + ' ajouté à la liste', true);
+    $('#add-name').value = '';
+    $('#add-name').focus();
+  });
+  $('#memo-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#memo-name').value.trim();
+    if (!name) return;
+    if (inMemo(name)) { showToast(name + ' est déjà dans le mémo', false); return; }
+    var aisle = $('#memo-aisle').value;
+    mutate(function () { state.memo.push({ id: uid(), name: name, aisle: aisle }); }, name + ' ajouté au mémo', true);
+    $('#memo-name').value = '';
+    $('#memo-name').focus();
+  });
+  $('#memo-search').addEventListener('input', function (e) { query = e.target.value; renderMemo(); });
+  window.addEventListener('hashchange', function () { view = location.hash === '#memo' ? 'memo' : 'liste'; renderTabs(); });
+
+  /* Démarrage */
+  var opts = AISLES.map(function (a) { return '<option value="' + a.id + '">' + esc(a.label) + '</option>'; }).join('');
+  $('#add-aisle').innerHTML = opts;
+  $('#memo-aisle').innerHTML = opts;
+  var d = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#date').textContent = d.charAt(0).toUpperCase() + d.slice(1);
+  view = location.hash === '#memo' ? 'memo' : 'liste';
+  renderAll();
+})();
+</script>
+
+</body></html>
